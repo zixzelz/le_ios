@@ -18,6 +18,7 @@ LEBackgroundThread* backgroundThread;
 dispatch_queue_t le_write_queue;
 char* le_token;
 bool le_debug_logs = false;
+bool le_system_logs = false;
 
 static int logfile_descriptor;
 static off_t logfile_size;
@@ -29,7 +30,7 @@ static void (*saved_le_exception_handler)(NSException *exception);
 
 void LE_DEBUG(NSString *format, ...) {
 #if DEBUG
-    if (le_debug_logs) {
+    if (le_debug_logs && le_system_logs) {
         va_list args;
         va_start(args, format);
         NSLogv(format, args);
@@ -275,4 +276,8 @@ bool is_valid_token(const char * token,size_t* token_length)
 
 void le_set_debug_logs(bool debug) {
     le_debug_logs = debug;
+}
+
+void le_set_system_logs(bool debug) {
+    le_system_logs = debug;
 }

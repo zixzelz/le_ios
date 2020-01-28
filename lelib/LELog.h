@@ -28,6 +28,8 @@
  */
 @property (nonatomic) BOOL debugLogs;
 
+@property (nonatomic) BOOL systemLogs;
+
 /*
  Appends space separated token to each log message.
  */

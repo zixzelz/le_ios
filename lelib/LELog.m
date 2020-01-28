@@ -90,6 +90,11 @@ extern char* le_token;
     le_set_debug_logs(debugLogs);
 }
 
+- (void)setSystemLogs:(BOOL)debugLogs
+{
+    le_set_system_logs(debugLogs);
+}
+
 - (NSString*)token
 {
     __block NSString* r = nil;
