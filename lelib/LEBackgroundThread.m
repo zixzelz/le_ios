@@ -84,27 +84,27 @@
 - (void)networkStatusDidChange:(LeNetworkStatus *)networkStatus
 {
     if ([networkStatus connected]) {
-        LE_DEBUG(@"Network status available");
+        LE_SYSTEM_DEBUG(@"Network status available");
         [self checkConnection];
     }
 }
 
 - (void)retryTimerFired:(NSTimer* __attribute__((unused)))timer
 {
-    LE_DEBUG(@"Retry timer fired");
+    LE_SYSTEM_DEBUG(@"Retry timer fired");
     [self checkConnection];
 }
 
 - (void)stream:(NSStream * __attribute__((unused)))aStream handleEvent:(NSStreamEvent)eventCode
 {
     if (eventCode & NSStreamEventOpenCompleted) {
-        LE_DEBUG(@"Socket event NSStreamEventOpenCompleted");
+        LE_SYSTEM_DEBUG(@"Socket event NSStreamEventOpenCompleted");
         eventCode = (NSStreamEvent)(eventCode & ~NSStreamEventOpenCompleted);
         self.logentryCompleted = YES;
     }
     
     if (eventCode & NSStreamEventErrorOccurred) {
-        LE_DEBUG(@"Socket event NSStreamEventErrorOccurred, scheduling retry timer");
+        LE_SYSTEM_DEBUG(@"Socket event NSStreamEventErrorOccurred, scheduling retry timer");
         eventCode = (NSStreamEvent)(eventCode & ~NSStreamEventErrorOccurred);
         [self.outputSocketStream close];
         self.outputSocketStream = nil;
@@ -117,13 +117,13 @@
     
     if (eventCode & NSStreamEventHasSpaceAvailable) {
         
-        LE_DEBUG(@"Socket event NSStreamEventHasSpaceAvailable");
+        LE_SYSTEM_DEBUG(@"Socket event NSStreamEventHasSpaceAvailable");
         eventCode = (NSStreamEvent)(eventCode & ~NSStreamEventHasSpaceAvailable);
         
         [self check];
     }
 
-    if (eventCode) LE_DEBUG(@"Received event %x", (unsigned int)eventCode);
+    if (eventCode) LE_SYSTEM_DEBUG(@"Received event %x", (unsigned int)eventCode);
 }
 
 - (void)readNextData
@@ -134,7 +134,7 @@
     size_t read = fread(output_buffer, 1, MAXIMUM_LOGENTRY_SIZE, self.inputFile);
     if (!read) {
         if (ferror(self.inputFile)) {
-            LE_DEBUG(@"Error reading logfile");
+            LE_SYSTEM_DEBUG(@"Error reading logfile");
         }
         return;
     }
@@ -151,11 +151,11 @@
 
 - (BOOL)openLogFile:(LogFile*)logFile
 {
-    LE_DEBUG(@"Will open file %ld", (long)logFile.orderNumber);
+    LE_SYSTEM_DEBUG(@"Will open file %ld", (long)logFile.orderNumber);
     NSString* path = [logFile logPath];
     self.inputFile = fopen([path cStringUsingEncoding:NSUTF8StringEncoding], "r");
     if (!self.inputFile) {
-        LE_DEBUG(@"Failed to open log file.");
+        LE_SYSTEM_DEBUG(@"Failed to open log file.");
         self.currentLogFile = nil;
         return FALSE;
     }
@@ -163,10 +163,10 @@
     file_position = logFile.bytesProcessed;
     int r = fseek(self.inputFile, file_position, SEEK_SET);
     if (r) {
-        LE_DEBUG(@"File seek error.");
+        LE_SYSTEM_DEBUG(@"File seek error.");
         file_position = 0;
     } else {
-        LE_DEBUG(@"Seeked to position %ld", file_position);
+        LE_SYSTEM_DEBUG(@"Seeked to position %ld", file_position);
     }
     
     self.currentLogFile = logFile;
@@ -178,7 +178,7 @@
  */
 - (BOOL)skip
 {
-    LE_DEBUG(@"Will skip, current file number is %ld", (long)self.currentLogFile.orderNumber);
+    LE_SYSTEM_DEBUG(@"Will skip, current file number is %ld", (long)self.currentLogFile.orderNumber);
     output_buffer_length = 0;
     output_buffer_position = 0;
     fclose(self.inputFile);
@@ -190,7 +190,7 @@
     while (next + MAXIMUM_FILE_COUNT <= self.lastLogFileNumber) {
         
         LogFile* logFileToDelete = [[LogFile alloc] initWithNumber:next];
-        LE_DEBUG(@"Removing skipped file %ld", (long)logFileToDelete.orderNumber);
+        LE_SYSTEM_DEBUG(@"Removing skipped file %ld", (long)logFileToDelete.orderNumber);
         [logFileToDelete remove];
         next++;
     }
@@ -202,27 +202,27 @@
         return FALSE;
     }
     
-    LE_DEBUG(@"Did skip, current file number is %ld", (long)self.currentLogFile.orderNumber);
+    LE_SYSTEM_DEBUG(@"Did skip, current file number is %ld", (long)self.currentLogFile.orderNumber);
     return TRUE;
 }
 
 - (void)check
 {
-    LE_DEBUG(@"Checking status");
+    LE_SYSTEM_DEBUG(@"Checking status");
     if (!self.currentLogFile) {
-        LE_DEBUG(@"Trying to open a log file");
+        LE_SYSTEM_DEBUG(@"Trying to open a log file");
         BOOL fixed = [self initializeInput];
         if (!fixed) {
-            LE_DEBUG(@"Can't open input file");
+            LE_SYSTEM_DEBUG(@"Can't open input file");
             return;
         }
     }
     
     if (self.logentryCompleted && [self shouldSkipToAnotherFile]) {
-        LE_DEBUG(@"Logentry completed and should skip to another file");
+        LE_SYSTEM_DEBUG(@"Logentry completed and should skip to another file");
         BOOL skipped = [self skip];
         if (!skipped) {
-            LE_DEBUG(@"Can't skip to next input file");
+            LE_SYSTEM_DEBUG(@"Can't skip to next input file");
             return;
         }
     }
@@ -230,23 +230,23 @@
     // check if there is something to send out
     if (output_buffer_position >= output_buffer_length) {
         
-        LE_DEBUG(@"Buffer empty, will read data");
+        LE_SYSTEM_DEBUG(@"Buffer empty, will read data");
         [self readNextData];
-        LE_DEBUG(@"Read %ld bytes", (long)output_buffer_length);
+        LE_SYSTEM_DEBUG(@"Read %ld bytes", (long)output_buffer_length);
         
         if (!output_buffer_length) {
             
             if (self.currentLogFile.orderNumber == self.lastLogFileNumber) {
-                LE_DEBUG(@"Nothing to do, finished");
-                LE_DEBUG(@"|");
+                LE_SYSTEM_DEBUG(@"Nothing to do, finished");
+                LE_SYSTEM_DEBUG(@"|");
                 return;
             }
                 
-            LE_DEBUG(@"Skip to another file");
+            LE_SYSTEM_DEBUG(@"Skip to another file");
             [self skip];
             [self readNextData];
             if (!output_buffer_length) {
-                LE_DEBUG(@"Failed to read data from just opened file");
+                LE_SYSTEM_DEBUG(@"Failed to read data from just opened file");
                 return;
             }
         }
@@ -254,7 +254,7 @@
 
     
     if (self.retryTimer) {
-        LE_DEBUG(@"Retry timer active");
+        LE_SYSTEM_DEBUG(@"Retry timer active");
         return;
     }
     
@@ -263,12 +263,12 @@
     }
     
     if ([self.outputSocketStream streamStatus] != NSStreamStatusOpen) {
-        LE_DEBUG(@"Stream not open yet");
+        LE_SYSTEM_DEBUG(@"Stream not open yet");
         return;
     }
     
     if (![self.outputSocketStream hasSpaceAvailable]) {
-        LE_DEBUG(@"No space available");
+        LE_SYSTEM_DEBUG(@"No space available");
         return;
     }
     
@@ -288,15 +288,15 @@
     }
     
 	NSInteger written = [self.outputSocketStream write:output_buffer + output_buffer_position maxLength:maxLength];
-    LE_DEBUG(@"Send out %ld bytes", (long)written);
+    LE_SYSTEM_DEBUG(@"Send out %ld bytes", (long)written);
     if (written == -1) {
-        LE_DEBUG(@"write error occured %@", self.outputSocketStream.streamError);
+        LE_SYSTEM_DEBUG(@"write error occured %@", self.outputSocketStream.streamError);
         return;
     }
 /*
     for (int i = 0; i < written; i++) {
         char c = output_buffer[output_buffer_position + i];
-        LE_DEBUG(@"written '%c' (%02x)", c, c);
+        LE_SYSTEM_DEBUG(@"written '%c' (%02x)", c, c);
     }
  */
     
@@ -328,7 +328,7 @@
         output_buffer_position = 0;
         
         // check for another data to send out
-        LE_DEBUG(@"Buffer written, will check for another data");
+        LE_SYSTEM_DEBUG(@"Buffer written, will check for another data");
         [self check];
     }
 }
@@ -342,7 +342,7 @@
 {
     if (self.inputFile) return YES;
     
-    LE_DEBUG(@"Opening input file");
+    LE_SYSTEM_DEBUG(@"Opening input file");
     LogFiles* logFiles = [LogFiles new];
     
     LogFile* logFile = [logFiles fileToRead];

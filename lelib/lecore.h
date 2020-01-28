@@ -17,6 +17,7 @@
 #define MAXIMUM_FILE_COUNT              3
 #define MAXIMUM_LOGFILE_SIZE            (1024 * 1024)
 
+extern void LE_SYSTEM_DEBUG(NSString *format, ...);
 extern void LE_DEBUG(NSString *format, ...);
 
 /* Pure C API */

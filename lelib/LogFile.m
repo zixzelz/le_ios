@@ -74,7 +74,7 @@
     
     deleted = [fileManager removeItemAtPath:logPath error:&error];
     if (!deleted) {
-        LE_DEBUG(@"Can't remove file at path '%@' with error %@", logPath, error);
+        LE_SYSTEM_DEBUG(@"Can't remove file at path '%@' with error %@", logPath, error);
         return NO;
     }
     
@@ -83,7 +83,7 @@
         error = nil;
         deleted = [fileManager removeItemAtPath:markPath error:&error];
         if (!deleted) {
-            LE_DEBUG(@"Can't remove file at path '%@' with error %@", logPath, error);
+            LE_SYSTEM_DEBUG(@"Can't remove file at path '%@' with error %@", logPath, error);
         }
     }
     
@@ -104,7 +104,7 @@
         NSError* error = nil;
         BOOL removed = [fileManager removeItemAtPath:newMarkPath error:&error];
         if (!removed) {
-            LE_DEBUG(@"Can't remove file at path '%@' with error %@", newMarkPath, error);
+            LE_SYSTEM_DEBUG(@"Can't remove file at path '%@' with error %@", newMarkPath, error);
             return;
         }
     }
@@ -113,7 +113,7 @@
     BOOL moved = [fileManager moveItemAtPath:oldLogPath toPath:newLogPath error:&error];
     
     if (!moved) {
-        LE_DEBUG(@"Can't move file from path '%@' to path '%@' with error %@", oldLogPath, newLogPath, error);
+        LE_SYSTEM_DEBUG(@"Can't move file from path '%@' to path '%@' with error %@", oldLogPath, newLogPath, error);
         return;
     }
 
@@ -125,7 +125,7 @@
         moved = [fileManager moveItemAtPath:oldMarkPath toPath:newMarkPath error:&local_error];
     
         if (!moved) {
-            LE_DEBUG(@"Can't move file from path '%@' to path '%@' with error %@", oldMarkPath, newMarkPath, local_error);
+            LE_SYSTEM_DEBUG(@"Can't move file from path '%@' to path '%@' with error %@", oldMarkPath, newMarkPath, local_error);
         }
     }
 }
@@ -141,7 +141,7 @@
     NSError* error = nil;
     NSDictionary *attributes = [fileManager attributesOfItemAtPath: path error: &error];
     if (!attributes) {
-        LE_DEBUG(@"Can't get file '%@' attributes with error %@", path, error);
+        LE_SYSTEM_DEBUG(@"Can't get file '%@' attributes with error %@", path, error);
     }
     UInt32 result = (UInt32)[attributes fileSize];
     return result;
@@ -161,7 +161,7 @@
     NSError* error = nil;
     NSString* mark = [NSString stringWithContentsOfFile:path encoding:NSASCIIStringEncoding error:&error];
     if (error) {
-        LE_DEBUG(@"Can't read mark file");
+        LE_SYSTEM_DEBUG(@"Can't read mark file");
         self.bytesProcessed = 0;
         return;
     }
@@ -225,7 +225,7 @@
     NSError* error = nil;
     BOOL r = [markString writeToFile:markPath atomically:YES encoding:NSASCIIStringEncoding error:&error];
     if (!r) {
-        LE_DEBUG(@"Error marking read position to file '%@'", error);
+        LE_SYSTEM_DEBUG(@"Error marking read position to file '%@'", error);
     }
     self.bytesProcessed = position;
 }

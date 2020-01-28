@@ -28,9 +28,18 @@ static char buffer[MAXIMUM_LOGENTRY_SIZE];
 
 static void (*saved_le_exception_handler)(NSException *exception);
 
+void LE_SYSTEM_DEBUG(NSString *format, ...) {
+    if (le_system_logs) {
+        va_list args;
+        va_start(args, format);
+        NSLogv(format, args);
+        va_end(args);
+    }
+}
+
 void LE_DEBUG(NSString *format, ...) {
 #if DEBUG
-    if (le_debug_logs && le_system_logs) {
+    if (le_debug_logs) {
         va_list args;
         va_start(args, format);
         NSLogv(format, args);
@@ -51,17 +60,17 @@ static int open_file(const char* path)
     
     logfile_descriptor = open(path, O_CREAT | O_WRONLY, mode);
     if (logfile_descriptor < 0) {
-        LE_DEBUG(@"Unable to open log file.");
+        LE_SYSTEM_DEBUG(@"Unable to open log file.");
         return 1;
     }
     
     logfile_size = lseek(logfile_descriptor, 0, SEEK_END);
     if (logfile_size < 0) {
-        LE_DEBUG(@"Unable to seek at end of file.");
+        LE_SYSTEM_DEBUG(@"Unable to seek at end of file.");
         return 1;
     }
     
-    LE_DEBUG(@"log file %s opened", path);
+    LE_SYSTEM_DEBUG(@"log file %s opened", path);
     return 0;
 }
 
@@ -86,7 +95,7 @@ void le_poke(void)
 static void le_exception_handler(NSException *exception)
 {
     NSString* message = [NSString stringWithFormat:@"Exception name=%@, reason=%@, userInfo=%@ addresses=%@ symbols=%@", [exception name], [exception reason], [exception userInfo], [exception callStackReturnAddresses], [exception callStackSymbols]];
-    LE_DEBUG(@"%@", message);
+    LE_SYSTEM_DEBUG(@"%@", message);
     message = [message stringByReplacingOccurrencesOfString:@"\n" withString:@"\u2028"];
     le_log([message cStringUsingEncoding:NSUTF8StringEncoding]);
     
@@ -110,7 +119,7 @@ int le_init(void)
         
         LogFiles* logFiles = [LogFiles new];
         if (!logFiles) {
-            LE_DEBUG(@"Error initializing logs directory.");
+            LE_SYSTEM_DEBUG(@"Error initializing logs directory.");
             return;
         }
         
@@ -122,7 +131,7 @@ int le_init(void)
         
         const char* path = [logFilePath cStringUsingEncoding:NSASCIIStringEncoding];
         if (!path) {
-            LE_DEBUG(@"Invalid logfile path.");
+            LE_SYSTEM_DEBUG(@"Invalid logfile path.");
             return;
         }
         
@@ -163,7 +172,7 @@ static void write_buffer(size_t used_length)
     
     ssize_t written = write(logfile_descriptor, buffer, (size_t)used_length);
     if (written < (ssize_t)used_length) {
-        LE_DEBUG(@"Could not write to log, no space left?");
+        LE_SYSTEM_DEBUG(@"Could not write to log, no space left?");
         return;
     }
     
@@ -184,7 +193,7 @@ void le_log(const char* message)
         
         size_t length = strlen(message);
         if (max_length < length) {
-            LE_DEBUG(@"Too large message, it will be truncated");
+            LE_SYSTEM_DEBUG(@"Too large message, it will be truncated");
             length = max_length;
         }
 
@@ -211,7 +220,7 @@ void le_write_string(NSString* string)
         
         NSUInteger maxLength = MAXIMUM_LOGENTRY_SIZE - token_length - 2; // minus token length, space separator and \n
         if ([string length] > maxLength) {
-            LE_DEBUG(@"Too large message, it will be truncated");
+            LE_SYSTEM_DEBUG(@"Too large message, it will be truncated");
         }
         
         memcpy(buffer, le_token, token_length);
@@ -223,7 +232,7 @@ void le_write_string(NSString* string)
         BOOL r = [string getBytes:(buffer + token_length + 1) maxLength:maxLength usedLength:&usedLength encoding:NSUTF8StringEncoding options:NSStringEncodingConversionAllowLossy range:range remainingRange:NULL];
         
         if (!r) {
-            LE_DEBUG(@"Error converting message characters.");
+            LE_SYSTEM_DEBUG(@"Error converting message characters.");
             return;
         }
         
@@ -241,7 +250,7 @@ void le_set_token(const char* token)
     
     char* local_buffer = malloc(length + 1);
     if (!local_buffer) {
-        LE_DEBUG(@"Can't allocate token buffer.");
+        LE_SYSTEM_DEBUG(@"Can't allocate token buffer.");
         return ;
     }
     strlcpy(local_buffer, token, length + 1);
@@ -257,7 +266,7 @@ bool is_valid_token(const char * token,size_t* token_length)
     
     if (token == NULL) {
         NSLog(@"nil token\n");
-        LE_DEBUG(@"nil token");
+        LE_SYSTEM_DEBUG(@"nil token");
         return false;
     }
     
@@ -267,7 +276,7 @@ bool is_valid_token(const char * token,size_t* token_length)
         *token_length = length;
     
     if (length < TOKEN_LENGTH) {
-        LE_DEBUG(@"Invalid token length, it will not be used.");
+        LE_SYSTEM_DEBUG(@"Invalid token length, it will not be used.");
         return false;
     }
     

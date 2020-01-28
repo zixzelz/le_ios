@@ -20,7 +20,7 @@
     NSArray* directories = [[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask];
     
     if (![directories count]) {
-        LE_DEBUG(@"Could not find caches directory.");
+        LE_SYSTEM_DEBUG(@"Could not find caches directory.");
         return nil;
     }
     
@@ -62,7 +62,7 @@
     NSError* error = nil;
     NSArray* contents = [fileManager contentsOfDirectoryAtPath:[[self class] logsDirectory] error:&error];
     if (!contents) {
-        LE_DEBUG(@"Can't get contents of logs directory.");
+        LE_SYSTEM_DEBUG(@"Can't get contents of logs directory.");
         return;
     }
 
@@ -76,7 +76,7 @@
             NSString* path = [[[self class] logsDirectory] stringByAppendingFormat:@"/%@", filename];
             BOOL r = [fileManager removeItemAtPath:path error:&local_error];
             if (!r) {
-                LE_DEBUG(@"Can't remove file '%@' with error %@.", filename, local_error);
+                LE_SYSTEM_DEBUG(@"Can't remove file '%@' with error %@.", filename, local_error);
             }
         }
     }
@@ -128,7 +128,7 @@
     BOOL created = [fileManager createDirectoryAtPath:path withIntermediateDirectories:NO attributes:nil error:&error];
     
     if (!created) {
-        LE_DEBUG(@"Can't create logentries directory '%@' with error %@", path, error);
+        LE_SYSTEM_DEBUG(@"Can't create logentries directory '%@' with error %@", path, error);
     }
     return created;
 }
@@ -143,7 +143,7 @@
         return [self createDirectory:logsDirectoryPath];
     } else {
         if (!isDirectory) {
-            LE_DEBUG(@"Can't create logentries directory '%@', file with same name already exists.", logsDirectoryPath);
+            LE_SYSTEM_DEBUG(@"Can't create logentries directory '%@', file with same name already exists.", logsDirectoryPath);
             return NO;
         } else {
             // directory already exists
@@ -163,7 +163,7 @@
     NSError* error = nil;
     NSArray* contents = [fileManager contentsOfDirectoryAtPath:[[self class] logsDirectory] error:&error];
     if (!contents) {
-        LE_DEBUG(@"Can't get contents of logs directory.");
+        LE_SYSTEM_DEBUG(@"Can't get contents of logs directory.");
         return nil;
     }
     
